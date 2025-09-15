@@ -6,15 +6,31 @@ try {
 } catch (_) {
   exec = null;
 }
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 const args = process.argv.slice(2);
 const noServe = args.includes('--no-serve');
-const fileArg = args.find((a) => !a.startsWith('-'));
+let fileArg = args.find((a) => !a.startsWith('-'));
+
+// StackBlitz-friendly: берём путь из env или файла, если аргумент не передан
+if (!fileArg) {
+  fileArg = process.env.STACKBLITZ_FILE || process.env.PLAY_FILE || '';
+}
+if (!fileArg) {
+  try {
+    if (existsSync('play-target.txt')) {
+      const txt = readFileSync('play-target.txt', 'utf8').trim();
+      if (txt) fileArg = txt;
+    }
+  } catch {}
+}
 
 if (!fileArg) {
-  console.error('Укажите путь к файлу: npm run play -- [--no-serve] src/путь/к/файлу.{jsx,html}');
+  console.error('Не указан файл. Укажите одним из способов:');
+  console.error('  1) npm run play -- [--no-serve] src/путь/к/файлу.{jsx,html}');
+  console.error('  2) переменная окружения STACKBLITZ_FILE или PLAY_FILE');
+  console.error('  3) файл play-target.txt в корне репозитория');
   process.exit(1);
 }
 
