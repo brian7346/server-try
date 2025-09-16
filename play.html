@@ -27,7 +27,7 @@
         iframe.style.border = '0';
         iframe.src = file;
         document.body.appendChild(iframe);
-      } else if (file.endsWith('.jsx') || file.endsWith('.tsx') || file.endsWith('.mdx')) {
+      } else if (file.endsWith('.jsx') || file.endsWith('.tsx') || file.endsWith('.js') || file.endsWith('.ts')) {
         import(file)
           .then((mod) => {
             const mount = mod.default || mod.App || mod.Component;
