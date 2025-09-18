@@ -51,7 +51,9 @@
     "play:@src:05-сторонние-эффекты:01-загрузка-данных:01-загрузка-данных.проблема.jsx": "node scripts/play.js @src/05-сторонние-эффекты/01-загрузка-данных/01-загрузка-данных.проблема.jsx",
     "play:@src:05-сторонние-эффекты:01-загрузка-данных:01-загрузка-данных.решение.jsx": "node scripts/play.js @src/05-сторонние-эффекты/01-загрузка-данных/01-загрузка-данных.решение.jsx",
     "play:@src:05-сторонние-эффекты:02-зависимости-эффекта:02-зависимости-эффекта.проблема.jsx": "node scripts/play.js @src/05-сторонние-эффекты/02-зависимости-эффекта/02-зависимости-эффекта.проблема.jsx",
-    "play:@src:05-сторонние-эффекты:02-зависимости-эффекта:02-зависимости-эффекта.решение.jsx": "node scripts/play.js @src/05-сторонние-эффекты/02-зависимости-эффекта/02-зависимости-эффекта.решение.jsx"
+    "play:@src:05-сторонние-эффекты:02-зависимости-эффекта:02-зависимости-эффекта.решение.jsx": "node scripts/play.js @src/05-сторонние-эффекты/02-зависимости-эффекта/02-зависимости-эффекта.решение.jsx",
+    "play:@src:06-effects:03-javascript-without-react:01-javascript-без-react.problem.html": "node scripts/play.js @src/06-effects/03-javascript-without-react/01-javascript-без-react.problem.html",
+    "play:@src:06-effects:03-javascript-without-react:01-javascript-без-react.solution.html": "node scripts/play.js @src/06-effects/03-javascript-without-react/01-javascript-без-react.solution.html"
   },
   "keywords": [],
   "author": "",
