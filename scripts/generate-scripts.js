@@ -24,7 +24,9 @@ function walk(dir) {
 
 function toWebPath(absPath) {
   const rel = relative(ROOT, absPath);
-  return '/' + posix.join(...rel.split(/\\+/g));
+  // Правильно обрабатываем кириллические символы в путях
+  const normalizedPath = posix.join(...rel.split(/\\+/g));
+  return '/' + normalizedPath;
 }
 
 function isPlayable(file) {
@@ -55,8 +57,9 @@ function main() {
 
   for (const abs of all) {
     const webPath = toWebPath(abs).replace(/^\/+/, ''); // без ведущего слэша для аргумента
-    // Имя скрипта без hex: play: + путь со слэшами, заменёнными на ':'
+    // Имя скрипта: play: + путь со слэшами, заменёнными на ':'
     const name = `play:${webPath.replace(/\//g, ':')}`;
+    // Передаем обычный путь - кодирование будет происходить в play.js
     pkg.scripts[name] = `node scripts/play.js ${webPath}`;
     byScript[name] = webPath;
     byPath[webPath] = name;

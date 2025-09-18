@@ -11,7 +11,13 @@ function computeOpenPath() {
       .reverse()
       .find((a) => typeof a === 'string' && !a.startsWith('-') && a !== 'run' && a !== 'play' && a !== 'vite');
     if (!candidate) return '/';
-    const webPath = ('/' + String(candidate).replace(/\\/g, '/').replace(/^\/+/, ''));
+    
+    // Декодируем кириллические символы в пути
+    const decodedCandidate = String(candidate).split('/').map(segment => 
+      segment ? decodeURIComponent(segment) : segment
+    ).join('/');
+    
+    const webPath = ('/' + decodedCandidate.replace(/\\/g, '/').replace(/^\/+/, ''));
     if (webPath.endsWith('.html')) return webPath;
     return `/play.html?file=${encodeURIComponent(webPath)}`;
   } catch {

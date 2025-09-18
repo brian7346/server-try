@@ -20,36 +20,41 @@
 
       if (!file) {
         document.getElementById('root').innerHTML = '<p>Добавьте параметр ?file=путь/к/файлу</p>';
-      } else if (file.endsWith('.html')) {
-        const iframe = document.createElement('iframe');
-        iframe.style.width = '100%';
-        iframe.style.height = '100vh';
-        iframe.style.border = '0';
-        iframe.src = file;
-        document.body.appendChild(iframe);
-      } else if (file.endsWith('.jsx') || file.endsWith('.tsx') || file.endsWith('.js') || file.endsWith('.ts')) {
-        import(file)
-          .then((mod) => {
-            const mount = mod.default || mod.App || mod.Component;
-            if (typeof mount === 'function') {
-              import('react').then(({ createElement }) =>
-                import('react-dom/client').then(({ createRoot }) => {
-                  const root = createRoot(document.getElementById('root'));
-                  root.render(createElement(mount));
-                })
-              );
-            } else if (typeof mod.run === 'function') {
-              mod.run(document.getElementById('root'));
-            } else {
-              document.getElementById('root').innerHTML = '<p>Модуль не экспортирует React-компонент или функцию run</p>';
-            }
-          })
-          .catch((e) => {
-            console.error(e);
-            document.getElementById('root').innerHTML = '<pre style="white-space: pre-wrap;">'+String(e)+'</pre>';
-          });
       } else {
-        document.getElementById('root').innerHTML = '<p>Неподдерживаемый тип файла: '+file+'</p>';
+        // Декодируем кириллические символы в пути файла
+        const decodedFile = decodeURIComponent(file);
+        
+        if (decodedFile.endsWith('.html')) {
+          const iframe = document.createElement('iframe');
+          iframe.style.width = '100%';
+          iframe.style.height = '100vh';
+          iframe.style.border = '0';
+          iframe.src = decodedFile;
+          document.body.appendChild(iframe);
+        } else if (decodedFile.endsWith('.jsx') || decodedFile.endsWith('.tsx') || decodedFile.endsWith('.js') || decodedFile.endsWith('.ts')) {
+          import(decodedFile)
+            .then((mod) => {
+              const mount = mod.default || mod.App || mod.Component;
+              if (typeof mount === 'function') {
+                import('react').then(({ createElement }) =>
+                  import('react-dom/client').then(({ createRoot }) => {
+                    const root = createRoot(document.getElementById('root'));
+                    root.render(createElement(mount));
+                  })
+                );
+              } else if (typeof mod.run === 'function') {
+                mod.run(document.getElementById('root'));
+              } else {
+                document.getElementById('root').innerHTML = '<p>Модуль не экспортирует React-компонент или функцию run</p>';
+              }
+            })
+            .catch((e) => {
+              console.error(e);
+              document.getElementById('root').innerHTML = '<pre style="white-space: pre-wrap;">'+String(e)+'</pre>';
+            });
+        } else {
+          document.getElementById('root').innerHTML = '<p>Неподдерживаемый тип файла: '+decodedFile+'</p>';
+        }
       }
     </script>
   </body>

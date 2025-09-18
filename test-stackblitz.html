@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест StackBlitz</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .test-info {
+            background: #e8f4f8;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .success {
+            color: #28a745;
+            font-weight: bold;
+        }
+        .error {
+            color: #dc3545;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Тест интеграции StackBlitz</h1>
+        
+        <div class="test-info">
+            <h3>Проверка кириллических символов</h3>
+            <p>Этот файл тестирует правильную обработку кириллических символов в путях файлов.</p>
+            <p class="success">✅ Файл успешно загружен!</p>
+            <p>Путь к файлу: <code>test-stackblitz.html</code></p>
+        </div>
+
+        <div class="test-info">
+            <h3>Информация о браузере</h3>
+            <p>User Agent: <span id="userAgent"></span></p>
+            <p>URL: <span id="currentUrl"></span></p>
+        </div>
+
+        <div class="test-info">
+            <h3>Тест JavaScript</h3>
+            <p>Результат теста: <span id="testResult"></span></p>
+        </div>
+    </div>
+
+    <script>
+        // Заполняем информацию о браузере
+        document.getElementById('userAgent').textContent = navigator.userAgent;
+        document.getElementById('currentUrl').textContent = window.location.href;
+        
+        // Простой тест JavaScript
+        try {
+            const testValue = 'Тест кириллических символов: привет мир!';
+            document.getElementById('testResult').innerHTML = '<span class="success">✅ ' + testValue + '</span>';
+        } catch (error) {
+            document.getElementById('testResult').innerHTML = '<span class="error">❌ Ошибка: ' + error.message + '</span>';
+        }
+    </script>
+</body>
+</html>

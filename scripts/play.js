@@ -42,8 +42,13 @@ if (!existsSync(absolute)) {
 
 const webPath = ('/' + fileArg.replace(/\\/g, '/').replace(/^\/+/, ''));
 
+// Правильно кодируем кириллические символы для URL
+const encodedWebPath = webPath.split('/').map(segment => 
+  segment ? encodeURIComponent(segment) : segment
+).join('/');
+
 const url = webPath.endsWith('.html')
-  ? webPath
+  ? encodedWebPath
   : `/play.html?file=` + encodeURIComponent(webPath);
 
 const cmd = `npm run dev -- --open ${url}`;
