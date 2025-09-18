@@ -28,7 +28,8 @@
           const noHash = p.split('#')[0];
           const noQuery = noHash.split('?')[0];
           const norm = noQuery.replace(/\\/g, '/');
-          const ensureAbs = norm.startsWith('/') ? norm : '/' + norm.replace(/^\/+/, '');
+          const withSrc = norm.replace(/^\/@src\//, '/src/');
+          const ensureAbs = withSrc.startsWith('/') ? withSrc : '/' + withSrc.replace(/^\/+/, '');
           const relDot = '.' + ensureAbs;
           const rel = ensureAbs.replace(/^\//, '');
           const relDot2 = './' + rel;
@@ -36,17 +37,47 @@
         };
         
         if (decodedFile.endsWith('.html')) {
-          const iframe = document.createElement('iframe');
-          iframe.style.width = '100%';
-          iframe.style.height = '100vh';
-          iframe.style.border = '0';
-          iframe.src = decodedFile;
-          document.body.appendChild(iframe);
+          // Загружаем HTML как текст и встраиваем через Blob, чтобы избежать
+          // проблем с доменом/кодировкой и лишних 404 в embed
+          const fetchVariants = (p) => {
+            const vs = toVariants(p);
+            // Пытаемся сначала абсолютом, затем относительными
+            return vs;
+          };
+          (async () => {
+            const variants = fetchVariants(decodedFile);
+            let html = '';
+            let ok = false;
+            for (const v of variants) {
+              try {
+                const r = await fetch(v);
+                if (r.ok) {
+                  html = await r.text();
+                  ok = true;
+                  break;
+                }
+              } catch {}
+            }
+            if (!ok) {
+              document.getElementById('root').innerHTML = '<p>Не удалось загрузить HTML: '+decodedFile+'</p>';
+              return;
+            }
+            const blob = new Blob([html], { type: 'text/html; charset=utf-8' });
+            const blobUrl = URL.createObjectURL(blob);
+            const iframe = document.createElement('iframe');
+            iframe.style.width = '100%';
+            iframe.style.height = '100vh';
+            iframe.style.border = '0';
+            iframe.src = blobUrl;
+            document.body.appendChild(iframe);
+          })();
         } else if (decodedFile.endsWith('.jsx') || decodedFile.endsWith('.tsx') || decodedFile.endsWith('.js') || decodedFile.endsWith('.ts')) {
           // Собираем карту модулей заранее, чтобы Vite знал об импортах
           const modules = {
             ...import.meta.glob('./src/**/*.{jsx,tsx,js,ts}'),
-            ...import.meta.glob('/src/**/*.{jsx,tsx,js,ts}')
+            ...import.meta.glob('/src/**/*.{jsx,tsx,js,ts}'),
+            ...import.meta.glob('./@src/**/*.{jsx,tsx,js,ts}'),
+            ...import.meta.glob('/@src/**/*.{jsx,tsx,js,ts}')
           };
 
           const candidates = toVariants(decodedFile);
@@ -57,19 +88,38 @@
             : import(/* @vite-ignore */ decodedFile);
 
           load.then((mod) => {
+            const container = document.getElementById('root');
             const mount = mod.default || mod.App || mod.Component;
+
+            const renderWithReact = (nodeOrComponent) => {
+              import('react-dom/client').then(({ createRoot }) => {
+                const root = createRoot(container);
+                root.render(nodeOrComponent);
+              });
+            };
+
             if (typeof mount === 'function') {
-              import('react').then(({ createElement }) =>
-                import('react-dom/client').then(({ createRoot }) => {
-                  const root = createRoot(document.getElementById('root'));
-                  root.render(createElement(mount));
-                })
-              );
-            } else if (typeof mod.run === 'function') {
-              mod.run(document.getElementById('root'));
-            } else {
-              document.getElementById('root').innerHTML = '<p>Модуль не экспортирует React-компонент или функцию run</p>';
+              import('react').then(({ createElement }) => renderWithReact(createElement(mount)));
+              return;
             }
+            if (mod.default && window.React && window.React.isValidElement?.(mod.default)) {
+              renderWithReact(mod.default);
+              return;
+            }
+            if (typeof mod.render === 'function') {
+              mod.render(container);
+              return;
+            }
+            if (typeof mod.run === 'function') {
+              mod.run(container);
+              return;
+            }
+
+            // Фоллбек: модуль мог сам смонтироваться побочным эффектом
+            queueMicrotask(() => {
+              if (container && container.childNodes && container.childNodes.length > 0) return;
+              container.innerHTML = '<p>Модуль не экспортирует React-компонент, элемент или функцию run/render</p>';
+            });
           }).catch((e) => {
             console.error(e);
             document.getElementById('root').innerHTML = '<pre style="white-space: pre-wrap;">'+String(e)+'</pre>';

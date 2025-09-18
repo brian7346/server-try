@@ -26,7 +26,7 @@ function toWebPath(absPath) {
   const rel = relative(ROOT, absPath);
   // Правильно обрабатываем кириллические символы в путях
   const normalizedPath = posix.join(...rel.split(/\\+/g));
-  return '/' + normalizedPath;
+  return '/@src/' + normalizedPath.replace(/^src\/?/, '');
 }
 
 function isPlayable(file) {
@@ -57,9 +57,9 @@ function main() {
 
   for (const abs of all) {
     const webPath = toWebPath(abs).replace(/^\/+/, ''); // без ведущего слэша для аргумента
-    // Имя скрипта: play: + путь со слэшами, заменёнными на ':'
+    // Имя скрипта: play:@src: + путь со слэшами, заменёнными на ':'
     const name = `play:${webPath.replace(/\//g, ':')}`;
-    // Передаем обычный путь - кодирование будет происходить в play.js
+    // Передаем путь с @src — кодирование будет происходить в play.js
     pkg.scripts[name] = `node scripts/play.js ${webPath}`;
     byScript[name] = webPath;
     byPath[webPath] = name;

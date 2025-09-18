@@ -28,10 +28,43 @@ function computeOpenPath() {
 }
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    react(),
+    {
+      name: 'play-redirect-html-to-play',
+      configureServer(server) {
+        server.middlewares.use((req, res, next) => {
+          if (process.env.npm_lifecycle_event === 'play') {
+            const url = req.url || '';
+            // Перенаправляем прямые запросы к src/**/*.html в /play.html?file=...
+            if (url.startsWith('/src/') && url.endsWith('.html') && !url.includes('html-proxy')) {
+              res.statusCode = 302;
+              res.setHeader('Location', `/play.html?file=${encodeURIComponent(url)}`);
+              res.end();
+              return;
+            }
+            // Поддержка алиаса @src — перенаправим /@src/... на /play.html
+            if (url.startsWith('/@src/') && url.endsWith('.html') && !url.includes('html-proxy')) {
+              const real = url.replace(/^\/\@src\//, '/src/');
+              res.statusCode = 302;
+              res.setHeader('Location', `/play.html?file=${encodeURIComponent(real)}`);
+              res.end();
+              return;
+            }
+          }
+          next();
+        });
+      },
+    },
+  ],
   server: {
     port: 5173,
     open: computeOpenPath(),
+  },
+  resolve: {
+    alias: {
+      '@src': '/src',
+    },
   },
   appType: 'spa',
 });
