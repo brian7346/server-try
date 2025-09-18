@@ -15,6 +15,12 @@
       window.ReactDOM = ReactDOMClientModule;
     </script>
     <script type="module">
+      // Принудительный full reload при любых HMR-событиях (устойчиво в StackBlitz)
+      if (import.meta && import.meta.hot) {
+        import.meta.hot.on('vite:beforeUpdate', () => location.reload());
+        import.meta.hot.on('vite:invalidate', () => location.reload());
+        import.meta.hot.on('vite:error', () => location.reload());
+      }
       const params = new URLSearchParams(window.location.search);
       const file = params.get('file');
 

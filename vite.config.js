@@ -54,6 +54,12 @@ export default defineConfig({
           }
           next();
         });
+        // Авто-рефреш при изменении файлов уроков
+        server.watcher.on('change', (file) => {
+          if (!/node_modules/.test(file) && /\/(src)\//.test(file) && /\.(html|jsx|tsx|js|ts)$/.test(file)) {
+            try { server.ws.send({ type: 'full-reload' }); } catch {}
+          }
+        });
       },
     },
   ],
