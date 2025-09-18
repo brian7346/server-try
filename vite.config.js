@@ -11,14 +11,16 @@ function computeOpenPath() {
       .reverse()
       .find((a) => typeof a === 'string' && !a.startsWith('-') && a !== 'run' && a !== 'play' && a !== 'vite');
     if (!candidate) return '/';
-    
-    // Декодируем кириллические символы в пути
+    // Безопасно декодируем кириллические символы в пути (не падаем на уже декодированном вводе)
+    const safeDecode = (s) => {
+      try { return decodeURIComponent(s); } catch { return s; }
+    };
     const decodedCandidate = String(candidate).split('/').map(segment => 
-      segment ? decodeURIComponent(segment) : segment
+      segment ? safeDecode(segment) : segment
     ).join('/');
-    
+
     const webPath = ('/' + decodedCandidate.replace(/\\/g, '/').replace(/^\/+/, ''));
-    if (webPath.endsWith('.html')) return webPath;
+    // Всегда открываем через play.html, чтобы унифицировать поведение в StackBlitz
     return `/play.html?file=${encodeURIComponent(webPath)}`;
   } catch {
     return false;

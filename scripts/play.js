@@ -47,9 +47,8 @@ const encodedWebPath = webPath.split('/').map(segment =>
   segment ? encodeURIComponent(segment) : segment
 ).join('/');
 
-const url = webPath.endsWith('.html')
-  ? encodedWebPath
-  : `/play.html?file=` + encodeURIComponent(webPath);
+// Всегда открываем через play.html для единообразия и корректной работы в StackBlitz
+const url = `/play.html?file=` + encodeURIComponent(webPath);
 
 const cmd = `npm run dev -- --open ${url}`;
 if (exec && !noServe) {
