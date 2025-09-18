@@ -22,7 +22,18 @@
         document.getElementById('root').innerHTML = '<p>Добавьте параметр ?file=путь/к/файлу</p>';
       } else {
         // Декодируем кириллические символы в пути файла
-        const decodedFile = decodeURIComponent(file);
+        const safeDecode = (s) => { try { return decodeURIComponent(s); } catch { return s; } };
+        const decodedFile = safeDecode(file);
+        const toVariants = (p) => {
+          const noHash = p.split('#')[0];
+          const noQuery = noHash.split('?')[0];
+          const norm = noQuery.replace(/\\/g, '/');
+          const ensureAbs = norm.startsWith('/') ? norm : '/' + norm.replace(/^\/+/, '');
+          const relDot = '.' + ensureAbs;
+          const rel = ensureAbs.replace(/^\//, '');
+          const relDot2 = './' + rel;
+          return [ensureAbs, relDot, rel, relDot2];
+        };
         
         if (decodedFile.endsWith('.html')) {
           const iframe = document.createElement('iframe');
@@ -32,26 +43,37 @@
           iframe.src = decodedFile;
           document.body.appendChild(iframe);
         } else if (decodedFile.endsWith('.jsx') || decodedFile.endsWith('.tsx') || decodedFile.endsWith('.js') || decodedFile.endsWith('.ts')) {
-          import(decodedFile)
-            .then((mod) => {
-              const mount = mod.default || mod.App || mod.Component;
-              if (typeof mount === 'function') {
-                import('react').then(({ createElement }) =>
-                  import('react-dom/client').then(({ createRoot }) => {
-                    const root = createRoot(document.getElementById('root'));
-                    root.render(createElement(mount));
-                  })
-                );
-              } else if (typeof mod.run === 'function') {
-                mod.run(document.getElementById('root'));
-              } else {
-                document.getElementById('root').innerHTML = '<p>Модуль не экспортирует React-компонент или функцию run</p>';
-              }
-            })
-            .catch((e) => {
-              console.error(e);
-              document.getElementById('root').innerHTML = '<pre style="white-space: pre-wrap;">'+String(e)+'</pre>';
-            });
+          // Собираем карту модулей заранее, чтобы Vite знал об импортах
+          const modules = {
+            ...import.meta.glob('./src/**/*.{jsx,tsx,js,ts}'),
+            ...import.meta.glob('/src/**/*.{jsx,tsx,js,ts}')
+          };
+
+          const candidates = toVariants(decodedFile);
+          const loader = candidates.map((k) => modules[k]).find(Boolean);
+
+          const load = loader
+            ? loader()
+            : import(/* @vite-ignore */ decodedFile);
+
+          load.then((mod) => {
+            const mount = mod.default || mod.App || mod.Component;
+            if (typeof mount === 'function') {
+              import('react').then(({ createElement }) =>
+                import('react-dom/client').then(({ createRoot }) => {
+                  const root = createRoot(document.getElementById('root'));
+                  root.render(createElement(mount));
+                })
+              );
+            } else if (typeof mod.run === 'function') {
+              mod.run(document.getElementById('root'));
+            } else {
+              document.getElementById('root').innerHTML = '<p>Модуль не экспортирует React-компонент или функцию run</p>';
+            }
+          }).catch((e) => {
+            console.error(e);
+            document.getElementById('root').innerHTML = '<pre style="white-space: pre-wrap;">'+String(e)+'</pre>';
+          });
         } else {
           document.getElementById('root').innerHTML = '<p>Неподдерживаемый тип файла: '+decodedFile+'</p>';
         }
